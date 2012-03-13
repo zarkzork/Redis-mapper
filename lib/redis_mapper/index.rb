@@ -42,6 +42,26 @@ module RedisMapper
         collection_accessor(name)
       end
 
+      def indexes_collection (name)
+        name = name.to_sym
+        attr_accessor name
+
+        callback :postsave do
+          (send name or []).each do |i|
+            key = (i.respond_to? :id) ? i.id : i
+            R.sadd(key, id)
+          end
+        end
+
+        callback :predelete do
+          (send name or []).each do |i|
+            key = (i.respond_to? :id) ? i.id : i
+            R.srem(key, id)
+          end
+        end
+      end
+
+
       private
 
       def collection_accessor(name)

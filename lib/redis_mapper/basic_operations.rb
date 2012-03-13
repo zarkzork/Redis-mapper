@@ -1,16 +1,26 @@
+require 'json'
+
 module RedisMapper
   module BasicOperations
 
     def id
-      return self.hash.id if has_key? "id"      
+      return self.hash['id'] if self.hash.has_key? "id"      
       add_id
     end
 
     def save
-      _run_save_callbacks do
+      run_callbacks :presave
+      #_run_save_callbacks do
         add_type
         R.set key_for(id), serialize
-      end
+      #end
+      run_callbacks :postsave
+    end
+
+    def delete
+      run_callbacks :predelete
+      R.del key_for(id)
+      run_callbacks :postdelete
     end
 
     def serialize
@@ -26,7 +36,7 @@ module RedisMapper
     end
 
     def add_id
-      self.hash['id'] = generate_key unless has_key? 'id'
+      self.hash['id'] = generate_key unless self.hash.has_key? 'id'
     end
 
     def generate_key
@@ -62,7 +72,7 @@ module RedisMapper
       private
 
       def parse(hash)
-        JSON.parse hash
+        hash && JSON.parse(hash)
       end
     end
   end

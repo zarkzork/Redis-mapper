@@ -21,9 +21,16 @@ module RedisMapper
       self.class.key_for v
     end
 
+    def run_callbacks (name)
+      ((self.class.callbacks ||= {}) [name] ||= []).each do |c|
+        self.instance_eval &c
+      end
+    end
+
     class << self
 
       attr :classes
+      attr_reader :callbacks
       
       def inherited(c)
         (@classes ||= {})[c.name] = c
@@ -36,6 +43,11 @@ module RedisMapper
         else
           super
         end
+      end
+
+      def callback (name, &block)
+        (@callbacks ||= {}) [name] ||= []
+        @callbacks [name].push(block)
       end
 
       def type_from_args(args)
