@@ -24,6 +24,7 @@ module RedisMapper
       private
 
       def define_field(m)
+        m = m.to_s
         define_method(m){ self.hash[m] }
         define_method("#{m}="){ |v| self.hash[m] = v }
       end

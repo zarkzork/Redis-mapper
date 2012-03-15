@@ -1,3 +1,5 @@
+require 'simplecov'
+SimpleCov.start
 require './lib/redis_mapper'
 
 def r
@@ -6,8 +8,9 @@ end
 
 r.select 13
 
-unless r.dbsize == 0
-  puts "Database number 13 is used for testing."
-  puts "It should be empty"
-  exit 1
+RSpec.configure do |c|
+  c.before(:each) do
+    #flush redis db
+    r.flushall
+  end
 end

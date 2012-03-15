@@ -2,10 +2,12 @@ module RedisMapper
   class Base
     # add immutability?
     # todo add equality
+    # todo check that id is correct on saving
 
     include Fields
     include BasicOperations
     include Index
+    include Tag
 
     attr_writer :hash
 
@@ -21,10 +23,9 @@ module RedisMapper
       self.class.key_for v
     end
 
-    def run_callbacks (name)
-      ((self.class.callbacks ||= {}) [name] ||= []).each do |c|
-        self.instance_eval &c
-      end
+    def run_callbacks(name)
+      return unless self.class.callbacks.is_a?(Hash)
+      self.class.callbacks[name].each{ |c| c.call(self) }
     end
 
     class << self
@@ -45,9 +46,9 @@ module RedisMapper
         end
       end
 
-      def callback (name, &block)
-        (@callbacks ||= {}) [name] ||= []
-        @callbacks [name].push(block)
+      def callback(name, &block)
+        @callbacks ||= Hash.new { |hash, key| hash[key] = [] }
+        @callbacks[name] << block
       end
 
       def type_from_args(args)

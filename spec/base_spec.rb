@@ -1,7 +1,15 @@
 require File.dirname(__FILE__) + '/spec_helper'
 
 class BaseTest1 < RedisMapper::Base; end
-class BaseTest2< RedisMapper::Base; end
+class BaseTest2 < RedisMapper::Base; end
+class BaseTest3 < RedisMapper::Base
+   field 'field1'
+
+   callback :presave do |o|
+     o.field1 = "callback_write"
+   end
+end
+
 
 describe RedisMapper::Base do
 
@@ -38,4 +46,10 @@ describe RedisMapper::Base do
       RedisMapper::Base.new 'type' => 'SomeWeirdType'
     }.to raise_error
   end
+
+   it 'has save callbacks' do
+     o = BaseTest3.new 'field1' => 'test_value'
+     o.save
+     BaseTest3.get(o.id).field1.should == 'callback_write'
+   end
 end

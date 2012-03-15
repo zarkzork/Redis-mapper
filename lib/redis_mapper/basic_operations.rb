@@ -10,16 +10,14 @@ module RedisMapper
 
     def save
       run_callbacks :presave
-      #_run_save_callbacks do
-        add_type
-        R.set key_for(id), serialize
-      #end
+      add_type!
+      R.set self.id, serialize
       run_callbacks :postsave
     end
 
     def delete
       run_callbacks :predelete
-      R.del key_for(id)
+      R.del id
       run_callbacks :postdelete
     end
 
@@ -29,7 +27,7 @@ module RedisMapper
     
     private
 
-    def add_type
+    def add_type!
       unless self.hash.has_key? 'type'
         self.hash['type'] = self.class.name
       end
@@ -40,27 +38,27 @@ module RedisMapper
     end
 
     def generate_key
-      digest self.hash.to_json
+      key_for(digest(self.hash.to_json))
     end
 
+    # Overwrite this method to change digest mechanism.
     def digest(s)
       Digest::MD5.hexdigest(s)    
     end
 
     def self.included(o)
-      o.extend ActiveModel::Callbacks    
       o.extend ClassMethods
     end
     
     module ClassMethods
-
-      def self.extended(o)
-        o.define_model_callbacks :save
-      end
       
       def get(id)
-        hash = parse R.get(key_for(id))
-        new(hash)
+        hash = R.get(id)
+        parse(hash)
+      end
+
+      def parse(hash)
+        new parse_hash(hash)
       end
 
       def create(hash)
@@ -71,7 +69,7 @@ module RedisMapper
 
       private
 
-      def parse(hash)
+      def parse_hash(hash)
         hash && JSON.parse(hash)
       end
     end

@@ -8,22 +8,22 @@ module RedisMapper
   # api should look something like
   #
   # class Test < Base
-  #   index :valid_items { |i| item.valid? }
+  #   index :valid_items { |o| o.valid? }
   # end
   #
   # if retuned value is array, then first element array is used as value
   # second as score.
-  # todo do we need provide methods for getting maximum score in lambda
-  # todo do we need methods to put element into index from code
+  # TODO do we need provide methods for getting maximum score in lambda
+  # TODO do we need methods to put element into index from code
   # cache sets
   module Index
 
     def add_to_index(name, score)
-      R.zadd key_for(name), score, self.id
+      R.zadd name, score, self.id
     end
 
     def remove_from_index(name)
-      R.zrem key_for(name)    
+      R.zrem name, self.id
     end
     
     def self.included(o)
@@ -42,45 +42,21 @@ module RedisMapper
         collection_accessor(name)
       end
 
-      def indexes_collection (name)
-        name = name.to_sym
-        attr_accessor name
-
-        callback :postsave do
-          (send name or []).each do |i|
-            key = (i.respond_to? :id) ? i.id : i
-            R.sadd(key, id)
-          end
-        end
-
-        callback :predelete do
-          (send name or []).each do |i|
-            key = (i.respond_to? :id) ? i.id : i
-            R.srem(key, id)
-          end
-        end
-      end
-
-
       private
 
-      def collection_accessor(name)
-        v_name = "@__#{name}"
-        define_method name do
-          #todo better way to write this
-          instance_variable_get(v_name) or
-            instance_variable_set v_name,  Zset.new(key_for(name))
-        end
+      def collection_accessor(collection_name)
+        define_singleton_method(collection_name) do
+          Zset.new(collection_name)
+        end          
       end
 
       def add_after_save_hook(name, &block)
-        after_save do
-          value, score = block.call(self)
+        callback :postsave do |o|
+          value, score = block.call(o)
           if value
-            score ||= 0 
-            add_to_index name, score
+            o.add_to_index name, (score || 0)
           else
-            remove_from_index name
+            o.remove_from_index name
           end
         end        
       end
@@ -96,23 +72,27 @@ module RedisMapper
       end
 
       def zset
-        @zset ||= fetch_set
+        @zset ||= fetch_set!
       end
 
       def [](index)
-        zset[index]
+        self.zset[index]
       end
 
       def each(&block)
-        zset.each(&block)
+        self.zset.each(&block)
+      end
+
+      def to_a
+        self.zset
       end
 
       def first
-        zset.first
+        self.zset.first
       end
 
       def last
-        zset.last
+        self.zset.last
       end
 
       def page(page = 1, per_page = 10)
@@ -129,13 +109,12 @@ module RedisMapper
       
       def fetch_set!
         hashes = R.sort @key, :get => "*", :limit => [@first, @last]
-        hashes.map { |h| instantiate h }
+        hashes.map { |h| instantiate(h) }
       end
 
       def instantiate(hash)
-        Base.new(hash)
+        Base.parse(hash)
       end
-      
     end
   end
 end
