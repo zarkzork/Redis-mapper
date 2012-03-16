@@ -7,6 +7,7 @@ module RedisMapper
   autoload :Fields, 'redis_mapper/fields'
   autoload :Base, 'redis_mapper/base'
   autoload :Tag, 'redis_mapper/tag'
+  autoload :Zset, 'redis_mapper/zset'
   
   R = Redis.current
 
