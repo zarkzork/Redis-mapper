@@ -44,6 +44,10 @@ module RedisMapper
     private
     
     def fetch_set!
+      # there is a bug in redis that returns sort of zset with nosort
+      # passed not sorted by zscore
+      # ( https://github.com/antirez/redis/issues/98 )
+      # TODO find way to fix that problem
       hashes = R.sort @key, :get => "*", :limit => [@first, @last], :by => 'nosort'
       hashes.map { |h| instantiate(h) }
     end
