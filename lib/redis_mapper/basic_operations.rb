@@ -8,11 +8,11 @@ module RedisMapper
       add_id
     end
 
-    def save
-      run_callbacks :presave
+    def create
+      run_callbacks :precreate
       add_type!
       R.set self.id, serialize
-      run_callbacks :postsave
+      run_callbacks :postcreate
     end
 
     def delete
@@ -54,7 +54,7 @@ module RedisMapper
       
       def get(id)
         hash = R.get(id)
-        parse(hash)
+        parse(hash) if hash
       end
 
       def parse(hash)
@@ -63,7 +63,7 @@ module RedisMapper
 
       def create(hash)
         o = new(hash)
-        o.save
+        o.create
         o
       end
 

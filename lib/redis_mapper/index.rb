@@ -1,7 +1,7 @@
 module RedisMapper
 
   # todo create index
-  # todo add :of property to index method (add save callback to
+  # todo add :of property to index method (add create callback to
   # class :of
   #
   # use hooks for saving or deleting information from indexes
@@ -38,7 +38,7 @@ module RedisMapper
 
       def index(name, &block)
         indexes[name] = block
-        add_after_save_hook(name, &block)
+        add_after_create_hook(name, &block)
         collection_accessor(name)
       end
 
@@ -50,8 +50,8 @@ module RedisMapper
         end          
       end
 
-      def add_after_save_hook(name, &block)
-        callback :postsave do |o|
+      def add_after_create_hook(name, &block)
+        callback :postcreate do |o|
           value, score = block.call(o)
           o.add_to_index name, (score || 0) if value
         end

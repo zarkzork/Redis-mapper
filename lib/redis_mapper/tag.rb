@@ -13,7 +13,7 @@ module RedisMapper
         name = name.to_sym
         field name
 
-        callback :postsave do |o|
+        callback :postcreate do |o|
           (o.send(name) || []).each do |t|
             key = (t.respond_to? :id) ? t.id : t
             R.sadd(key, o.id)

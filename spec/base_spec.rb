@@ -5,7 +5,7 @@ class BaseTest2 < RedisMapper::Base; end
 class BaseTest3 < RedisMapper::Base
    field 'field1'
 
-   callback :presave do |o|
+   callback :precreate do |o|
      o.field1 = "callback_write"
    end
 end
@@ -47,9 +47,9 @@ describe RedisMapper::Base do
     }.to raise_error
   end
 
-   it 'has save callbacks' do
+   it 'has create callbacks' do
      o = BaseTest3.new 'field1' => 'test_value'
-     o.save
+     o.create
      BaseTest3.get(o.id).field1.should == 'callback_write'
    end
 end
