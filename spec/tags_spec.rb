@@ -26,21 +26,41 @@ describe RedisMapper::Tag do
 
   it 'updates tags on create and delete' do
     o = TagsTest.new 'field1' => 'test_value'
-    o.hohoho = ["test_index1", "test_index2"]
-    r.sismember("test_index1", o.id).should == false
-    r.sismember("test_index2", o.id).should == false
+    o.hohoho = ["tag1", "tag2"]
+    r.sismember(o.digest("tag1"), o.id).should == false
+    r.sismember(o.digest("tag2"), o.id).should == false
     o.create
-    r.sismember("test_index1", o.id).should == true
-    r.sismember("test_index2", o.id).should == true
+    r.sismember(o.digest("tag1"), o.id).should == true
+    r.sismember(o.digest("tag2"), o.id).should == true
     o.delete
-    r.sismember("test_index1", o.id).should == false
-    r.sismember("test_index2", o.id).should == false
+    r.sismember(o.digest("tag1"), o.id).should == false
+    r.sismember(o.digest("tag2"), o.id).should == false
   end
 
   it 'allows to access collection' do
     o = TagsTest.new 'field1' => 'test_value'
-    o.hohoho = ["test_index1", "test_index2"]
+    o.hohoho = ["tag1", "tag2"]
     o.create
-    TagsTest.hohoho_for('test_index1').to_a.map(&:id).should == [o.id]
+    TagsTest.hohoho_for('tag1').to_a.map(&:id).should == [o.id]
+  end
+
+  it 'counts tags usage' do
+    o1 = TagsTest.new 'field1' => 'test_value'
+    o1.hohoho = ["tag10", "tag20", "мимими"]
+    o2 = TagsTest.new 'field2' => 'test_value'
+    o2.hohoho = ["tag10"]
+    r.zscore("TagsTest.tags", "tag10").should == nil
+    r.zscore("TagsTest.tags", "tag20").should == nil
+    r.zscore("TagsTest.tags", "мимими").should == nil
+    o1.create
+    o2.create
+    r.zscore("TagsTest.tags", "tag10").should == "2"
+    r.zscore("TagsTest.tags", "tag20").should == "1"
+    r.zscore("TagsTest.tags", "мимими").should == "1"
+    o1.delete
+    o2.delete
+    r.zscore("TagsTest.tags", "tag10").should == "0"
+    r.zscore("TagsTest.tags", "tag20").should == "0"
+    r.zscore("TagsTest.tags", "мимими").should == "0"
   end
 end

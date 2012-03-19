@@ -6,4 +6,5 @@ gem 'activemodel'
 group :development do
   gem 'rspec'
   gem 'simplecov', :require => false
+  gem 'pry'
 end

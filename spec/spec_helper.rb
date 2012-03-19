@@ -1,5 +1,9 @@
 require 'simplecov'
-SimpleCov.start
+
+SimpleCov.start do 
+  add_filter '/development/'
+end
+
 require './lib/redis_mapper'
 
 def r

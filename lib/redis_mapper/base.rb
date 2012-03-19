@@ -28,6 +28,11 @@ module RedisMapper
       self.class.callbacks[name].each{ |c| c.call(self) }
     end
 
+    # Overwrite this method to change digest mechanism.
+    def digest(s)
+      Digest::MD5.hexdigest(s)    
+    end
+
     class << self
 
       attr :classes

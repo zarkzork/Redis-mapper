@@ -4,12 +4,12 @@ module RedisMapper
   module BasicOperations
 
     def id
-      return self.hash['id'] if self.hash.has_key? "id"      
-      add_id
+      self.hash['id']
     end
 
     def create
       run_callbacks :precreate
+      add_id!
       add_type!
       R.set self.id, serialize
       run_callbacks :postcreate
@@ -28,22 +28,17 @@ module RedisMapper
     private
 
     def add_type!
-      unless self.hash.has_key? 'type'
-        self.hash['type'] = self.class.name
-      end
+      return if self.hash.has_key? 'type'
+      self.hash['type'] = self.class.name
     end
 
-    def add_id
+    def add_id!
+      return if self.hash.has_key? 'id'
       self.hash['id'] = generate_key unless self.hash.has_key? 'id'
     end
 
     def generate_key
       key_for(digest(self.hash.to_json))
-    end
-
-    # Overwrite this method to change digest mechanism.
-    def digest(s)
-      Digest::MD5.hexdigest(s)    
     end
 
     def self.included(o)
@@ -53,12 +48,12 @@ module RedisMapper
     module ClassMethods
       
       def get(id)
-        hash = R.get(id)
-        parse(hash) if hash
+        str = R.get(id)
+        parse(str) if str
       end
 
-      def parse(hash)
-        new parse_hash(hash)
+      def parse(str)
+        new parse_hash(str)
       end
 
       def create(hash)
@@ -69,8 +64,8 @@ module RedisMapper
 
       private
 
-      def parse_hash(hash)
-        hash && JSON.parse(hash)
+      def parse_hash(str)
+        str && JSON.parse(str)
       end
     end
   end
