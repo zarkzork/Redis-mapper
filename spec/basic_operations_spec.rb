@@ -11,20 +11,20 @@ describe RedisMapper::BasicOperations do
     o.create
     o.hash['type'].should == "BOTest1"
   end
-  
+
   it 'adds id when saving' do
     o = BOTest1.new 'field1' => 'test_value'
     o.hash['id'].should == nil
     o.create
     o.hash['id'].should_not == nil
   end
-  
+
   it 'stores attributes' do
     o = BOTest1.new 'field1' => 'test_value'
     o.create
     BOTest1.get(o.id).field1.should == 'test_value'
   end
-  
+
   it 'removes object on delete' do
     o = BOTest1.create 'field1' => 'test_value'
     id = o.id
@@ -54,8 +54,4 @@ describe RedisMapper::BasicOperations do
     BOTest1.get(old_id).should == nil
     BOTest1.get(o.id).field1.should == 'bar'
   end
-
-  it 'users transactions to create, delete and recreate records'
-  
-  
 end

@@ -8,7 +8,8 @@ module RedisMapper
   autoload :Base, 'redis_mapper/base'
   autoload :Tag, 'redis_mapper/tag'
   autoload :Zset, 'redis_mapper/zset'
-  
+  autoload :SimpleZset, 'redis_mapper/zset'
+
   R = Redis.current
 
 end

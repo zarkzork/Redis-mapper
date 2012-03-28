@@ -41,6 +41,6 @@ describe RedisMapper::Index do
       Word.create 'content' => w
     end
 
-    Word.by_length.to_a.map(&:content).should == %w[Procrastination Peace Love War]
+    Word.by_length.to_a.map(&:content).should == %w[War Peace Love Procrastination]
   end
 end

@@ -1,4 +1,4 @@
-module RedisMapper  
+module RedisMapper
   class Base
     # add immutability?
     # todo add equality
@@ -28,16 +28,15 @@ module RedisMapper
       self.class.callbacks[name].each{ |c| c.call(self) }
     end
 
-    # Overwrite this method to change digest mechanism.
     def digest(s)
-      Digest::MD5.hexdigest(s)    
+      self.class.digest(s)
     end
 
     class << self
 
       attr :classes
       attr_reader :callbacks
-      
+
       def inherited(c)
         (@classes ||= {})[c.name] = c
       end
@@ -59,9 +58,13 @@ module RedisMapper
       def type_from_args(args)
         h = args.first and h.instance_of?(Hash) and h['type']
       end
-      
+
       def key_for(v)
         "#{self.name}##{v}"
+      end
+
+      def digest(s)
+        Digest::MD5.hexdigest(s)
       end
     end
   end

@@ -25,7 +25,7 @@ module RedisMapper
     def remove_from_index(name)
       R.zrem name, self.id
     end
-    
+
     def self.included(o)
       o.extend ClassMethods
     end
@@ -33,21 +33,21 @@ module RedisMapper
     module ClassMethods
 
       def indexes
-        @indexes ||= {}      
+        @indexes ||= {}
       end
 
       def index(name, &block)
         indexes[name] = block
         add_after_create_hook(name, &block)
-        collection_accessor(name)
+        create_collection_accessor(name)
       end
 
       private
 
-      def collection_accessor(collection_name)
+      def create_collection_accessor(collection_name)
         define_singleton_method(collection_name) do
           Zset.new(collection_name)
-        end          
+        end
       end
 
       def add_after_create_hook(name, &block)
@@ -60,7 +60,7 @@ module RedisMapper
           o.remove_from_index name # We remove it from index anyway
         end
       end
-      
+
     end
   end
 end

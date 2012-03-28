@@ -1,10 +1,10 @@
 module RedisMapper
-  class Zset
+  class BaseZset
 
     include Enumerable
 
-    def initialize(key, first = 0, last = -1)
-      @key, @first, @last = key, first, last
+    def initialize(key, first = 0, last = -1, reverse = false)
+      @key, @first, @last, @reverse = key, first, last, reverse
     end
 
     def zset
@@ -41,19 +41,39 @@ module RedisMapper
       fetch_set!
     end
 
-    private
-    
-    def fetch_set!
-      # there is a bug in redis that returns sort of zset with nosort
-      # passed not sorted by zscore
-      # ( https://github.com/antirez/redis/issues/98 )
-      # TODO find way to fix that problem
-      hashes = R.sort @key, :get => "*", :limit => [@first, @last], :by => 'nosort'
-      hashes.map { |h| instantiate(h) }
+    def reverse
+      self.class.new(@key, @first, @last, !@reverse)
     end
+
+    protected
+
+    def fetch_set!
+      raise NotImplementedError
+    end
+
+    private
 
     def instantiate(hash)
       Base.parse(hash)
+    end
+  end
+
+  class Zset < BaseZset
+    protected
+
+    def fetch_set!
+      order = @reverse ? 'nosort DESC' : 'nosort'
+      hashes = R.sort @key, :get => "*", :limit => [@first, @last], :by => order
+      hashes.map { |h| instantiate(h) }
+    end
+  end
+
+  class SimpleZset < BaseZset
+    protected
+
+    def fetch_set!
+      command = @reverse ? :zrevrange : :zrange
+      R.send command, @key, @first, @last
     end
   end
 end
