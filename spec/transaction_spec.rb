@@ -36,5 +36,5 @@ describe RedisMapper::BasicOperations do
 
   it 'uses transactions to recreate records'
   it 'uses transactions to delete records'
-  it 'it cancels transaction on error'
+  it 'cancels transaction on error'
 end

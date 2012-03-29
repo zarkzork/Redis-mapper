@@ -41,7 +41,7 @@ describe RedisMapper::Tag do
     o = TagsTest.new 'field1' => 'test_value'
     o.hohoho = ["tag1", "tag2"]
     o.create
-    TagsTest.hohoho_for('tag1').to_a.map(&:id).should == [o.id]
+    TagsTest.for_hohoho('tag1').to_a.map(&:id).should == [o.id]
   end
 
   it 'stores tags usage' do

@@ -7,7 +7,7 @@ module RedisMapper
 
     module ClassMethods
 
-      def has_tags(name = :tags)
+      def has_tags(name = :tag)
         name = name.to_sym
         field name
         list_key = tags_list_key(name)
@@ -36,7 +36,7 @@ module RedisMapper
       private
 
       def create_tag_accessor(name)
-        define_singleton_method("#{name}_for") do |tag|
+        define_singleton_method("for_#{name}") do |tag|
           Zset.new(self.digest(tag))
         end
       end
